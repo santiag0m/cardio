@@ -35,7 +35,11 @@ def get_bootstrap_metrics(
     ground_truth, predicted, baseline=None, bootstrap_samples=10000
 ):
     roc_auc = []
+    roc_youden = []
     pr_auc = []
+    pr_f1 = []
+    cal_ece = []
+    cal_mce = []
 
     sample_size = ground_truth.shape[0]
     for _ in range(bootstrap_samples):
@@ -44,7 +48,11 @@ def get_bootstrap_metrics(
         sample_pred = predicted[idxs]
         sample_metrics = get_metrics(sample_gt, sample_pred)
         roc_auc.append(sample_metrics["roc"]["auc"])
+        roc_youden.append(sample_metrics["roc"]["youden"])
         pr_auc.append(sample_metrics["pr"]["auc"])
+        pr_f1.append(sample_metrics["pr"]["f1"])
+        cal_ece.append(sample_metrics["calibration"]["ece"])
+        cal_mce.append(sample_metrics["calibration"]["mce"])
 
     metric_dict = {}
     metric_dict["holdout"] = get_metrics(ground_truth, predicted, baseline=baseline)
@@ -53,43 +61,86 @@ def get_bootstrap_metrics(
             "auc": np.mean(roc_auc),
             "auc_ci": (np.quantile(roc_auc, 0.05), np.quantile(roc_auc, 0.95)),
             "auc_pval": None,
+            "youden": np.mean(roc_youden),
+            "youden_ci": (np.quantile(roc_youden, 0.05), np.quantile(roc_youden, 0.95)),
+            "youden_pval": None,
         },
         "pr": {
             "auc": np.mean(pr_auc),
             "auc_ci": (np.quantile(pr_auc, 0.05), np.quantile(pr_auc, 0.95)),
             "auc_pval": None,
+            "f1": np.mean(pr_f1),
+            "f1_ci": (np.quantile(pr_f1, 0.05), np.quantile(pr_f1, 0.95)),
+            "f1_pval": None,
+        },
+        "calibration": {
+            "ece": np.mean(cal_ece),
+            "ece_ci": (np.quantile(cal_ece, 0.05), np.quantile(cal_ece, 0.95)),
+            "ece_pval": None,
+            "mce": np.mean(cal_ece),
+            "mce_ci": (np.quantile(cal_ece, 0.05), np.quantile(cal_ece, 0.95)),
+            "mce_pval": None,
         },
     }
 
     if baseline is not None:
-        # Hypothesis testing as described in: http://www.stat.ucla.edu/~rgould/110as02/bshypothesis.pdf
         roc_auc = np.array(roc_auc)
+        roc_youden = np.array(roc_youden)
         pr_auc = np.array(pr_auc)
+        pr_f1 = np.array(pr_f1)
+        cal_ece = np.array(cal_ece)
+        cal_mce = np.array(cal_mce)
 
         metrics_baseline = get_metrics(ground_truth, baseline)
 
         roc_auc_baseline = metrics_baseline["roc"]["auc"]
+        roc_youden_baseline = metrics_baseline["roc"]["youden"]
         pr_auc_baseline = metrics_baseline["pr"]["auc"]
-
-        h0_roc_auc = roc_auc - np.mean(roc_auc) + roc_auc_baseline
-        h0_pr_auc = pr_auc - np.mean(pr_auc) + pr_auc_baseline
+        pr_f1_baseline = metrics_baseline["pr"]["f1"]
+        cal_ece_baseline = metrics_baseline["calibration"]["ece"]
+        cal_mce_baseline = metrics_baseline["calibration"]["mce"]
 
         roc_auc_diff = np.abs(metric_dict["holdout"]["roc"]["auc"] - roc_auc_baseline)
+        roc_youden_diff = np.abs(
+            metric_dict["holdout"]["roc"]["youden"] - roc_youden_baseline
+        )
         pr_auc_diff = np.abs(metric_dict["holdout"]["pr"]["auc"] - pr_auc_baseline)
-
-        roc_outside = np.sum(h0_roc_auc < (roc_auc_baseline - roc_auc_diff)) + np.sum(
-            h0_roc_auc > (roc_auc_baseline + roc_auc_diff)
+        pr_f1_diff = np.abs(metric_dict["holdout"]["pr"]["f1"] - pr_f1_baseline)
+        cal_ece_diff = np.abs(
+            metric_dict["holdout"]["calibration"]["ece"] - cal_ece_baseline
+        )
+        cal_mce_diff = np.abs(
+            metric_dict["holdout"]["calibration"]["mce"] - cal_mce_baseline
         )
 
-        pr_outside = np.sum(h0_pr_auc < (pr_auc_baseline - pr_auc_diff)) + np.sum(
-            h0_pr_auc > (pr_auc_baseline + pr_auc_diff)
+        metric_dict["bootstrap"]["roc"]["auc_pval"] = two_side_hypothesis_testing(
+            roc_auc, roc_auc_baseline, roc_auc_diff
         )
-
-        metric_dict["bootstrap"]["roc"]["auc_pval"] = roc_outside / bootstrap_samples
-
-        metric_dict["bootstrap"]["pr"]["auc_pval"] = pr_outside / bootstrap_samples
+        metric_dict["bootstrap"]["roc"]["youden_pval"] = two_side_hypothesis_testing(
+            roc_youden, roc_youden_baseline, roc_youden_diff
+        )
+        metric_dict["bootstrap"]["pr"]["auc_pval"] = two_side_hypothesis_testing(
+            pr_auc, pr_auc_baseline, pr_auc_diff
+        )
+        metric_dict["bootstrap"]["pr"]["f1_pval"] = two_side_hypothesis_testing(
+            pr_f1, pr_f1_baseline, pr_f1_diff
+        )
+        metric_dict["bootstrap"]["calibration"]["ece_pval"] = two_side_hypothesis_testing(
+            cal_ece, cal_ece_baseline, cal_ece_diff
+        )
+        metric_dict["bootstrap"]["calibration"]["mce_pval"] = two_side_hypothesis_testing(
+            cal_mce, cal_mce_baseline, cal_mce_diff
+        )
 
     return metric_dict
+
+
+def two_side_hypothesis_testing(experiment, baseline, diff):
+    # Hypothesis testing as described in: http://www.stat.ucla.edu/~rgould/110as02/bshypothesis.pdf
+    sample_size = len(experiment)
+    h0 = experiment - np.mean(experiment) + baseline
+    outside = np.sum(h0 < (baseline - diff)) + np.sum(h0 > (baseline + diff))
+    return outside / float(sample_size)
 
 
 def get_metrics(ground_truth, predicted, baseline=None):
@@ -99,6 +150,7 @@ def get_metrics(ground_truth, predicted, baseline=None):
     metric_dict = {}
     metric_dict["roc"] = get_roc_metrics(ground_truth, predicted, baseline=baseline)
     metric_dict["pr"] = get_pr_metrics(ground_truth, predicted)
+    metric_dict["calibration"] = get_calibration_metrics(ground_truth, predicted)
     return metric_dict
 
 
@@ -107,14 +159,14 @@ def get_roc_metrics(ground_truth, predicted, baseline=None):
     Calculate metrics related to the Receiver Operating Characteristic (ROC) curve.
     """
     fpr, tpr, thresh_array = metrics.roc_curve(ground_truth, predicted, pos_label=1)
-    dmin, thresh, mr = doptim(calcdist(fpr, tpr), thresh_array, predicted)
+    j, thresh, mr = youden_optim(calc_youden(fpr, tpr), thresh_array, predicted)
     auc = metrics.auc(fpr, tpr)  # , reorder=True)
     auc_ci = roc_auc_ci(auc, np.sum(ground_truth == 1), np.sum(ground_truth == 0))
     metric_dict = {
         "fpr": fpr,
         "tpr": tpr,
         "threshold": thresh,
-        "min_distance": dmin,
+        "youden": j,
         "auc": auc,
         "auc_ci": auc_ci,
         "auc_pval": None,
@@ -151,6 +203,22 @@ def get_pr_metrics(ground_truth, predicted, baseline=None):
         "auc_pval": None,
         "mortality_rate": mr,
     }
+
+
+def get_calibration_metrics(ground_truth, predicted, baseline=None):
+    """
+    Calculate metrics related to the calibration/reliability curve as
+    described in: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4410090/
+    """
+    positive_fraction, mean_predicted_value, bin_counts = calibration_curve_quantile(
+        ground_truth, predicted, n_bins=10, return_bin_counts=True
+    )
+
+    p_i = bin_counts / len(predicted)
+    error = np.abs(positive_fraction - mean_predicted_value)
+    ece = np.sum(p_i * error)
+    mce = np.max(error)
+    return {"ece": ece, "mce": mce}
 
 
 def roc_auc_ci(auc, na, nn, alpha=0.05):
@@ -195,26 +263,26 @@ def pr_auc_ci(auc, num_positive, alpha=0.05):
     return left, right
 
 
-def calcdist(fpr, tpr):
-    "Calulate distance to the optimal point in the ROC curve"
-    dx = (fpr) ** 2
-    dy = (1 - tpr) ** 2
-    d = (dx + dy) ** 0.5
-    return d
+def calc_youden(fpr, tpr):
+    sensitivity = tpr
+    specificity = 1 - fpr
+    youden = sensitivity + specificity - 1
+    return youden
 
 
-def doptim(d, thresh, pred=None):
+def youden_optim(youden, thresh, pred=None):
     """
-    Find the minimum distance to the optimal point in the ROC curve
+    Find the maximum value for the Youden's J statistic, its corresponding threshold
+    and the predicted mortality rate.
     """
-    ind = np.argmin(d)
-    dmin = d[ind]
+    ind = np.argmax(youden)
+    j = youden[ind]
     thresh = thresh[ind]
     if pred is not None:
         mr = np.sum(pred >= thresh) / pred.shape[0]
     else:
         mr = None
-    return dmin, thresh, mr
+    return j, thresh, mr
 
 
 def calcf1(precision, recall):
@@ -240,7 +308,7 @@ def foptim(f1, thresh, pred=None):
     return fmax, thresh, mr
 
 
-def calibration_curve_quantile(y_true, y_pred, n_bins=5):
+def calibration_curve_quantile(y_true, y_pred, n_bins=5, return_bin_counts=False):
     assert len(y_pred) == len(y_true)
     indexes = np.argsort(y_pred)
     sorted_true = y_true[indexes]
@@ -250,6 +318,7 @@ def calibration_curve_quantile(y_true, y_pred, n_bins=5):
 
     positive_fraction = np.zeros(n_bins)
     mean_predicted_value = np.zeros(n_bins)
+    bin_counts = np.zeros(n_bins)
 
     for i in range(n_bins):
         begin = i * bin_size
@@ -259,5 +328,9 @@ def calibration_curve_quantile(y_true, y_pred, n_bins=5):
             end = (i + 1) * bin_size
         positive_fraction[i] = sorted_true[begin:end].mean()
         mean_predicted_value[i] = sorted_pred[begin:end].mean()
+        bin_counts[i] = end - begin
 
-    return positive_fraction, mean_predicted_value
+    if return_bin_counts:
+        return positive_fraction, mean_predicted_value, bin_counts
+    else:
+        return positive_fraction, mean_predicted_value

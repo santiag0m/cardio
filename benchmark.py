@@ -82,11 +82,22 @@ def export_results(results):
                     "ROC AUC": metrics["holdout"]["roc"]["auc"],
                     "ROC AUC 5 (Normal)": metrics["holdout"]["roc"]["auc_ci"][0],
                     "ROC AUC 95 (Normal)": metrics["holdout"]["roc"]["auc_ci"][1],
-                    "ROC p-value (DeLong)": metrics["holdout"]["roc"]["auc_pval"],
+                    "ROC AUC p-value (DeLong)": metrics["holdout"]["roc"]["auc_pval"],
                     "ROC AUC 5 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][0],
                     "ROC AUC 95 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][1],
-                    "ROC p-value (Bootstrap)": metrics["bootstrap"]["roc"]["auc_pval"],
-                    "ROC Min. Distance": metrics["holdout"]["roc"]["min_distance"],
+                    "ROC AUC p-value (Bootstrap)": metrics["bootstrap"]["roc"][
+                        "auc_pval"
+                    ],
+                    "ROC Youden's J": metrics["holdout"]["roc"]["youden"],
+                    "ROC Youden's J 5 (Bootstrap) ": metrics["holdout"]["roc"][
+                        "youden_c1"
+                    ][0],
+                    "ROC Youden's J 95 (Bootstrap) ": metrics["holdout"]["roc"][
+                        "youden_c1"
+                    ][1],
+                    "ROC Youden's J p-value (Bootstrap) ": metrics["holdout"]["roc"][
+                        "youden_pval"
+                    ],
                     "ROC Threshold": metrics["holdout"]["roc"]["threshold"],
                     "ROC Mortality Rate": metrics["holdout"]["roc"]["mortality_rate"],
                     # PR
@@ -95,10 +106,32 @@ def export_results(results):
                     "PR AUC 95 (Logit)": metrics["holdout"]["pr"]["auc_ci"][1],
                     "PR AUC 5 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][0],
                     "PR AUC 95 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][1],
-                    "PR p-value (Bootstrap)": metrics["bootstrap"]["pr"]["auc_pval"],
-                    "PR F1 Max.": metrics["holdout"]["pr"]["f1"],
+                    "PR AUC p-value (Bootstrap)": metrics["bootstrap"]["pr"][
+                        "auc_pval"
+                    ],
+                    "PR F1": metrics["holdout"]["pr"]["f1"],
+                    "PR F1 5 (Bootstrap) ": metrics["holdout"]["pr"]["f1_c1"][0],
+                    "PR F1 95 (Bootstrap) ": metrics["holdout"]["pr"]["f1_c1"][1],
+                    "PR F1 p-value (Bootstrap) ": metrics["holdout"]["pr"]["f1_pval"],
                     "PR Threshold": metrics["holdout"]["pr"]["threshold"],
                     "PR Mortality Rate": metrics["holdout"]["pr"]["mortality_rate"],
+                    # CALIBRATION
+                    "ECE": metrics["holdout"]["calibration"]["ece"],
+                    "ECE 5 (Bootstrap)": metrics["holdout"]["calibration"]["ece_ci"][0],
+                    "ECE 95 (Bootstrap)": metrics["holdout"]["calibration"]["ece_ci"][
+                        1
+                    ],
+                    "ECE p-value (Bootstrap)": metrics["holdout"]["calibration"][
+                        "ece_pval"
+                    ],
+                    "MCE": metrics["holdout"]["calibration"]["mce"],
+                    "MCE 5 (Bootstrap)": metrics["holdout"]["calibration"]["mce_ci"][0],
+                    "MCE 95 (Bootstrap)": metrics["holdout"]["calibration"]["mce_ci"][
+                        1
+                    ],
+                    "MCE p-value (Bootstrap)": metrics["holdout"]["calibration"][
+                        "mce_pval"
+                    ],
                 }
             )
         else:
@@ -108,17 +141,19 @@ def export_results(results):
                     "ROC AUC": metrics["roc"]["auc"],
                     "ROC AUC 5 (Normal)": metrics["roc"]["auc_ci"][0],
                     "ROC AUC 95 (Normal)": metrics["roc"]["auc_ci"][1],
-                    "ROC p-value (DeLong)": metrics["roc"]["auc_pval"],
-                    "ROC Min. Distance": metrics["roc"]["min_distance"],
+                    "ROC AUC p-value (DeLong)": metrics["roc"]["auc_pval"],
+                    "ROC Youden's J": metrics["roc"]["youden"],
                     "ROC Threshold": metrics["roc"]["threshold"],
                     "ROC Mortality Rate": metrics["roc"]["mortality_rate"],
                     "PR AUC": metrics["pr"]["auc"],
                     "PR AUC 5 (Logit)": metrics["pr"]["auc_ci"][0],
                     "PR AUC 95 (Logit)": metrics["pr"]["auc_ci"][1],
-                    # "PR p-value": metrics["pr"]["auc_pval"],
-                    "PR F1 Max.": metrics["pr"]["f1"],
+                    # "PR AUC p-value": metrics["pr"]["auc_pval"],
+                    "PR F1": metrics["pr"]["f1"],
                     "PR Threshold": metrics["pr"]["threshold"],
                     "PR Mortality Rate": metrics["pr"]["mortality_rate"],
+                    "ECE": metrics["calibration"]["ece"],
+                    "MCE": metrics["calibration"]["mce"],
                 }
             )
     records = pd.DataFrame.from_records(records)

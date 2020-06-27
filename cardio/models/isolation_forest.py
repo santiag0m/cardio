@@ -50,13 +50,8 @@ class IsolationForest(Model):
         precision = []
         recall = []
 
-        f1_max = -1
-        min_distance = np.inf
-        roc_thresh = None
-        pr_thresh = None
-
         metric_dict = {
-            "roc": {"min_distance": np.inf, "thresh": None},
+            "roc": {"youden": -1, "thresh": None},
             "pr": {"f1": -1, "thresh": None},
         }
 
@@ -78,7 +73,7 @@ class IsolationForest(Model):
             precision.append(tp / (tp + fp))
             recall.append(tp / (tp + fn))
 
-            roc_distance = utils.calcdist(fpr[-1], tpr[-1])
+            roc_youden = (1 - fpr[-1]) + tpr[-1] - 1
 
             if (precision[-1] * recall[-1]) == 0:
                 f1 = 0
@@ -90,8 +85,8 @@ class IsolationForest(Model):
                 metric_dict["pr"]["threshold"] = t
                 metric_dict["pr"]["mortality_rate"] = (tp + fp) / pred_test.shape[0]
 
-            if roc_distance < metric_dict["roc"]["min_distance"]:
-                metric_dict["roc"]["min_distance"] = roc_distance
+            if roc_youden > metric_dict["roc"]["youden"]:
+                metric_dict["roc"]["youden"] = roc_youden
                 metric_dict["roc"]["threshold"] = t
                 metric_dict["roc"]["mortality_rate"] = (tp + fp) / pred_test.shape[0]
 
@@ -113,12 +108,38 @@ class IsolationForest(Model):
         )
         metric_dict["pr"]["auc_pval"] = None  # TODO: Implement
 
+        metric_dict["calibration"]["ece"] = None
+        metric_dict["calibration"]["mce"] = None
+
         if bootstrap:
             new_dict = {}
             new_dict["holdout"] = metric_dict
             new_dict["bootstrap"] = {
-                "roc": {"auc": None, "auc_ci": [None, None], "auc_pval": None,},
-                "pr": {"auc": None, "auc_ci": [None, None], "auc_pval": None,},
+                "roc": {
+                    "auc": None,
+                    "auc_ci": [None, None],
+                    "auc_pval": None,
+                    "youden": None,
+                    "youden_ci": None,
+                    "youden_pval": None,
+                },
+                "pr": {
+                    "auc": None,
+                    "auc_ci": [None, None],
+                    "auc_pval": None,
+                    "f1": None,
+                    "f1_ci": None,
+                    "f1_pval": None,
+                },
+                "calibration": {
+                    "ece": None,
+                    "ece_ci": [None, None],
+                    "ece_pval": None,
+                    "ece": None,
+                    "mce": None,
+                    "mce_ci": [None, None],
+                    "mce_pval": None,
+                },
             }
             metric_dict = new_dict
 
