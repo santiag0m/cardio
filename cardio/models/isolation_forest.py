@@ -53,6 +53,7 @@ class IsolationForest(Model):
         metric_dict = {
             "roc": {"youden": -1, "thresh": None},
             "pr": {"f1": -1, "thresh": None},
+            "calibration": {},
         }
 
         for t in tqdm(thresholds):
@@ -120,7 +121,7 @@ class IsolationForest(Model):
                     "auc_ci": [None, None],
                     "auc_pval": None,
                     "youden": None,
-                    "youden_ci": None,
+                    "youden_ci": [None, None],
                     "youden_pval": None,
                 },
                 "pr": {
@@ -128,7 +129,7 @@ class IsolationForest(Model):
                     "auc_ci": [None, None],
                     "auc_pval": None,
                     "f1": None,
-                    "f1_ci": None,
+                    "f1_ci": [None, None],
                     "f1_pval": None,
                 },
                 "calibration": {
