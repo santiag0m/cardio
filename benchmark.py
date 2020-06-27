@@ -1,5 +1,6 @@
 import os
 
+import yaml
 import pandas as pd
 from tqdm import tqdm
 
@@ -18,35 +19,36 @@ SPLIT_SOURCE = os.path.join("data", "processedDataJune2020.xlsx")
 EUROSCORE_SOURCE = os.path.join("data", "cardiodataMay2020.xlsx")
 
 EXPORT_PATH = "benchmark_results_final_variables.csv"
+OUTPUT_PATH = "data/outputs.yaml"
 
 USE_BOOTSTRAP = True
 
 FEATURES = [
-    "Paciente: Edad",
-    "Paciente: Sexo_Femenino",
-    "Indice de masa corporal",
-    "Hipertensión",
-    "Diabetes",
-    "Enfermedad pulmonar crónica",
-    "Enfermedad arterial periférica",
-    "Enfermedad cerebro vascular",
-    "Insuficiencia cardíaca",
-    "Insuficiencia renal - diálisis",
-    "Fracción de Eyección (E)",
-    "Ultimo hematocrito",
-    "Ultimo nivel de creatinina",
-    "Endocarditis infecciosa",
-    "Resucitación",
-    "Shock cardiogénico",
-    "Arritmia",
-    "Número de vasos coronarios enfermos",
-    "Insuficiencia aórtica (E)",
-    "Insuficiencia mitral (E)",
-    "Insuficiencia tricuspídea (E)",
-    "Estado",
-    "Peso del procedimiento - procedimiento aislado no CABG",
-    "Peso del procedimiento - dos procedimientos",
-    "Peso del procedimiento - tres o más procedimientos",
+    "Paciente: Edad",  # Age
+    "Paciente: Sexo_Femenino",  # Gender: Female
+    "Indice de masa corporal",  # BMI
+    "Hipertensión",  # Hypertension
+    "Diabetes",  # Diabetes
+    "Enfermedad pulmonar crónica",  # COPD
+    "Enfermedad arterial periférica",  # Peripheral Artery Disease
+    "Enfermedad cerebro vascular",  # Stroke
+    "Insuficiencia cardíaca",  # Heart failure
+    "Insuficiencia renal - diálisis",  # Dialysis
+    "Fracción de Eyección (E)",  # LVEF
+    "Ultimo hematocrito",  # Hematocrit
+    "Ultimo nivel de creatinina",  # Creatinine
+    "Endocarditis infecciosa",  # Endocarditis
+    "Resucitación",  # Reanimation
+    "Shock cardiogénico",  # Cardiogenic Shock
+    "Arritmia",  # Arrhythmia
+    "Número de vasos coronarios enfermos",  # Coronary Arteries Blocked
+    "Insuficiencia aórtica (E)",  # Aortic valve insufficiency
+    "Insuficiencia mitral (E)",  # Mitral valve regurgitation
+    "Insuficiencia tricuspídea (E)",  # Tricuspid valve regurgitation
+    "Estado",  # Urgency upon admission
+    "Peso del procedimiento - procedimiento aislado no CABG",  # (Weight of procedure) Isolated non-CABG
+    "Peso del procedimiento - dos procedimientos",  # (Weight of procedure) Two procedures
+    "Peso del procedimiento - tres o más procedimientos",  # (Weight of procedure) Three or more procedures
 ]
 
 OUTCOME = "Muerte 30 días después de la cirugía"  # Death 30 days after surgery
@@ -89,13 +91,13 @@ def export_results(results):
                         "auc_pval"
                     ],
                     "ROC Youden's J": metrics["holdout"]["roc"]["youden"],
-                    "ROC Youden's J 5 (Bootstrap) ": metrics["holdout"]["roc"][
-                        "youden_c1"
+                    "ROC Youden's J 5 (Bootstrap) ": metrics["bootstrap"]["roc"][
+                        "youden_ci"
                     ][0],
-                    "ROC Youden's J 95 (Bootstrap) ": metrics["holdout"]["roc"][
-                        "youden_c1"
+                    "ROC Youden's J 95 (Bootstrap) ": metrics["bootstrap"]["roc"][
+                        "youden_ci"
                     ][1],
-                    "ROC Youden's J p-value (Bootstrap) ": metrics["holdout"]["roc"][
+                    "ROC Youden's J p-value (Bootstrap) ": metrics["bootstrap"]["roc"][
                         "youden_pval"
                     ],
                     "ROC Threshold": metrics["holdout"]["roc"]["threshold"],
@@ -110,26 +112,30 @@ def export_results(results):
                         "auc_pval"
                     ],
                     "PR F1": metrics["holdout"]["pr"]["f1"],
-                    "PR F1 5 (Bootstrap) ": metrics["holdout"]["pr"]["f1_c1"][0],
-                    "PR F1 95 (Bootstrap) ": metrics["holdout"]["pr"]["f1_c1"][1],
-                    "PR F1 p-value (Bootstrap) ": metrics["holdout"]["pr"]["f1_pval"],
+                    "PR F1 5 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][0],
+                    "PR F1 95 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][1],
+                    "PR F1 p-value (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_pval"],
                     "PR Threshold": metrics["holdout"]["pr"]["threshold"],
                     "PR Mortality Rate": metrics["holdout"]["pr"]["mortality_rate"],
                     # CALIBRATION
                     "ECE": metrics["holdout"]["calibration"]["ece"],
-                    "ECE 5 (Bootstrap)": metrics["holdout"]["calibration"]["ece_ci"][0],
-                    "ECE 95 (Bootstrap)": metrics["holdout"]["calibration"]["ece_ci"][
+                    "ECE 5 (Bootstrap)": metrics["bootstrap"]["calibration"]["ece_ci"][
+                        0
+                    ],
+                    "ECE 95 (Bootstrap)": metrics["bootstrap"]["calibration"]["ece_ci"][
                         1
                     ],
-                    "ECE p-value (Bootstrap)": metrics["holdout"]["calibration"][
+                    "ECE p-value (Bootstrap)": metrics["bootstrap"]["calibration"][
                         "ece_pval"
                     ],
                     "MCE": metrics["holdout"]["calibration"]["mce"],
-                    "MCE 5 (Bootstrap)": metrics["holdout"]["calibration"]["mce_ci"][0],
-                    "MCE 95 (Bootstrap)": metrics["holdout"]["calibration"]["mce_ci"][
+                    "MCE 5 (Bootstrap)": metrics["bootstrap"]["calibration"]["mce_ci"][
+                        0
+                    ],
+                    "MCE 95 (Bootstrap)": metrics["bootstrap"]["calibration"]["mce_ci"][
                         1
                     ],
-                    "MCE p-value (Bootstrap)": metrics["holdout"]["calibration"][
+                    "MCE p-value (Bootstrap)": metrics["bootstrap"]["calibration"][
                         "mce_pval"
                     ],
                 }
@@ -216,3 +222,5 @@ if __name__ == "__main__":
         print(f"ROC AUC: {roc_auc:.3f} - PR AUC: {pr_auc:.3f}")
 
     export_results(results)
+    with open(OUTPUT_PATH, "w") as f:
+        yaml.dump(results, f)
