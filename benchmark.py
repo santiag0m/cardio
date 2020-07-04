@@ -1,6 +1,7 @@
 import os
+import json
 
-import yaml
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -19,7 +20,7 @@ SPLIT_SOURCE = os.path.join("data", "processedDataJune2020.xlsx")
 EUROSCORE_SOURCE = os.path.join("data", "cardiodataMay2020.xlsx")
 
 EXPORT_PATH = "benchmark_results_final_variables.csv"
-OUTPUT_PATH = "data/outputs.yaml"
+OUTPUT_PATH = "data/outputs.json"
 
 USE_BOOTSTRAP = True
 
@@ -82,19 +83,21 @@ def export_results(results):
                     "Model": model_name,
                     # ROC
                     "ROC AUC": metrics["holdout"]["roc"]["auc"],
-                    "ROC AUC 5 (Normal)": metrics["holdout"]["roc"]["auc_ci"][0],
-                    "ROC AUC 95 (Normal)": metrics["holdout"]["roc"]["auc_ci"][1],
+                    "ROC AUC 2_5 (Normal)": metrics["holdout"]["roc"]["auc_ci"][0],
+                    "ROC AUC 97_5 (Normal)": metrics["holdout"]["roc"]["auc_ci"][1],
                     "ROC AUC p-value (DeLong)": metrics["holdout"]["roc"]["auc_pval"],
-                    "ROC AUC 5 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][0],
-                    "ROC AUC 95 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][1],
+                    "ROC AUC 2_5 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][0],
+                    "ROC AUC 97_5 (Bootstrap)": metrics["bootstrap"]["roc"]["auc_ci"][
+                        1
+                    ],
                     "ROC AUC p-value (Bootstrap)": metrics["bootstrap"]["roc"][
                         "auc_pval"
                     ],
                     "ROC Youden's J": metrics["holdout"]["roc"]["youden"],
-                    "ROC Youden's J 5 (Bootstrap) ": metrics["bootstrap"]["roc"][
+                    "ROC Youden's J 2_5 (Bootstrap) ": metrics["bootstrap"]["roc"][
                         "youden_ci"
                     ][0],
-                    "ROC Youden's J 95 (Bootstrap) ": metrics["bootstrap"]["roc"][
+                    "ROC Youden's J 97_5 (Bootstrap) ": metrics["bootstrap"]["roc"][
                         "youden_ci"
                     ][1],
                     "ROC Youden's J p-value (Bootstrap) ": metrics["bootstrap"]["roc"][
@@ -104,37 +107,37 @@ def export_results(results):
                     "ROC Mortality Rate": metrics["holdout"]["roc"]["mortality_rate"],
                     # PR
                     "PR AUC": metrics["holdout"]["pr"]["auc"],
-                    "PR AUC 5 (Logit)": metrics["holdout"]["pr"]["auc_ci"][0],
-                    "PR AUC 95 (Logit)": metrics["holdout"]["pr"]["auc_ci"][1],
-                    "PR AUC 5 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][0],
-                    "PR AUC 95 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][1],
+                    "PR AUC 2_5 (Logit)": metrics["holdout"]["pr"]["auc_ci"][0],
+                    "PR AUC 97_5 (Logit)": metrics["holdout"]["pr"]["auc_ci"][1],
+                    "PR AUC 2_5 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][0],
+                    "PR AUC 97_5 (Bootstrap)": metrics["bootstrap"]["pr"]["auc_ci"][1],
                     "PR AUC p-value (Bootstrap)": metrics["bootstrap"]["pr"][
                         "auc_pval"
                     ],
                     "PR F1": metrics["holdout"]["pr"]["f1"],
-                    "PR F1 5 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][0],
-                    "PR F1 95 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][1],
+                    "PR F1 2_5 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][0],
+                    "PR F1 97_5 (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_ci"][1],
                     "PR F1 p-value (Bootstrap) ": metrics["bootstrap"]["pr"]["f1_pval"],
                     "PR Threshold": metrics["holdout"]["pr"]["threshold"],
                     "PR Mortality Rate": metrics["holdout"]["pr"]["mortality_rate"],
                     # CALIBRATION
                     "ECE": metrics["holdout"]["calibration"]["ece"],
-                    "ECE 5 (Bootstrap)": metrics["bootstrap"]["calibration"]["ece_ci"][
-                        0
-                    ],
-                    "ECE 95 (Bootstrap)": metrics["bootstrap"]["calibration"]["ece_ci"][
-                        1
-                    ],
+                    "ECE 2_5 (Bootstrap)": metrics["bootstrap"]["calibration"][
+                        "ece_ci"
+                    ][0],
+                    "ECE 97_5 (Bootstrap)": metrics["bootstrap"]["calibration"][
+                        "ece_ci"
+                    ][1],
                     "ECE p-value (Bootstrap)": metrics["bootstrap"]["calibration"][
                         "ece_pval"
                     ],
                     "MCE": metrics["holdout"]["calibration"]["mce"],
-                    "MCE 5 (Bootstrap)": metrics["bootstrap"]["calibration"]["mce_ci"][
-                        0
-                    ],
-                    "MCE 95 (Bootstrap)": metrics["bootstrap"]["calibration"]["mce_ci"][
-                        1
-                    ],
+                    "MCE 2_5 (Bootstrap)": metrics["bootstrap"]["calibration"][
+                        "mce_ci"
+                    ][0],
+                    "MCE 97_5 (Bootstrap)": metrics["bootstrap"]["calibration"][
+                        "mce_ci"
+                    ][1],
                     "MCE p-value (Bootstrap)": metrics["bootstrap"]["calibration"][
                         "mce_pval"
                     ],
@@ -145,15 +148,15 @@ def export_results(results):
                 {
                     "Model": model_name,
                     "ROC AUC": metrics["roc"]["auc"],
-                    "ROC AUC 5 (Normal)": metrics["roc"]["auc_ci"][0],
-                    "ROC AUC 95 (Normal)": metrics["roc"]["auc_ci"][1],
+                    "ROC AUC 2_5 (Normal)": metrics["roc"]["auc_ci"][0],
+                    "ROC AUC 97_5 (Normal)": metrics["roc"]["auc_ci"][1],
                     "ROC AUC p-value (DeLong)": metrics["roc"]["auc_pval"],
                     "ROC Youden's J": metrics["roc"]["youden"],
                     "ROC Threshold": metrics["roc"]["threshold"],
                     "ROC Mortality Rate": metrics["roc"]["mortality_rate"],
                     "PR AUC": metrics["pr"]["auc"],
-                    "PR AUC 5 (Logit)": metrics["pr"]["auc_ci"][0],
-                    "PR AUC 95 (Logit)": metrics["pr"]["auc_ci"][1],
+                    "PR AUC 2_5 (Logit)": metrics["pr"]["auc_ci"][0],
+                    "PR AUC 97_5 (Logit)": metrics["pr"]["auc_ci"][1],
                     # "PR AUC p-value": metrics["pr"]["auc_pval"],
                     "PR F1": metrics["pr"]["f1"],
                     "PR Threshold": metrics["pr"]["threshold"],
@@ -164,6 +167,12 @@ def export_results(results):
             )
     records = pd.DataFrame.from_records(records)
     records.to_csv(EXPORT_PATH, index=False)
+
+
+def json_default(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError("Not serializable")
 
 
 if __name__ == "__main__":
@@ -221,6 +230,9 @@ if __name__ == "__main__":
             pr_auc = results[name]["pr"]["auc"]
         print(f"ROC AUC: {roc_auc:.3f} - PR AUC: {pr_auc:.3f}")
 
+        if name == "gradient_boosting":
+            results[name]["feature_importance"] = model.feature_importance
+
     export_results(results)
     with open(OUTPUT_PATH, "w") as f:
-        yaml.dump(results, f)
+        json.dump(results, f, default=json_default)
