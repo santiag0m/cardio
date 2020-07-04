@@ -59,26 +59,29 @@ def get_bootstrap_metrics(
     metric_dict["bootstrap"] = {
         "roc": {
             "auc": np.mean(roc_auc),
-            "auc_ci": (np.quantile(roc_auc, 0.05), np.quantile(roc_auc, 0.95)),
+            "auc_ci": (np.quantile(roc_auc, 0.025), np.quantile(roc_auc, 0.975)),
             "auc_pval": None,
             "youden": np.mean(roc_youden),
-            "youden_ci": (np.quantile(roc_youden, 0.05), np.quantile(roc_youden, 0.95)),
+            "youden_ci": (
+                np.quantile(roc_youden, 0.025),
+                np.quantile(roc_youden, 0.975),
+            ),
             "youden_pval": None,
         },
         "pr": {
             "auc": np.mean(pr_auc),
-            "auc_ci": (np.quantile(pr_auc, 0.05), np.quantile(pr_auc, 0.95)),
+            "auc_ci": (np.quantile(pr_auc, 0.025), np.quantile(pr_auc, 0.975)),
             "auc_pval": None,
             "f1": np.mean(pr_f1),
-            "f1_ci": (np.quantile(pr_f1, 0.05), np.quantile(pr_f1, 0.95)),
+            "f1_ci": (np.quantile(pr_f1, 0.025), np.quantile(pr_f1, 0.975)),
             "f1_pval": None,
         },
         "calibration": {
             "ece": np.mean(cal_ece),
-            "ece_ci": (np.quantile(cal_ece, 0.05), np.quantile(cal_ece, 0.95)),
+            "ece_ci": (np.quantile(cal_ece, 0.025), np.quantile(cal_ece, 0.975)),
             "ece_pval": None,
-            "mce": np.mean(cal_ece),
-            "mce_ci": (np.quantile(cal_ece, 0.05), np.quantile(cal_ece, 0.95)),
+            "mce": np.mean(cal_mce),
+            "mce_ci": (np.quantile(cal_mce, 0.025), np.quantile(cal_mce, 0.975)),
             "mce_pval": None,
         },
     }
@@ -125,12 +128,12 @@ def get_bootstrap_metrics(
         metric_dict["bootstrap"]["pr"]["f1_pval"] = two_side_hypothesis_testing(
             pr_f1, pr_f1_baseline, pr_f1_diff
         )
-        metric_dict["bootstrap"]["calibration"]["ece_pval"] = two_side_hypothesis_testing(
-            cal_ece, cal_ece_baseline, cal_ece_diff
-        )
-        metric_dict["bootstrap"]["calibration"]["mce_pval"] = two_side_hypothesis_testing(
-            cal_mce, cal_mce_baseline, cal_mce_diff
-        )
+        metric_dict["bootstrap"]["calibration"][
+            "ece_pval"
+        ] = two_side_hypothesis_testing(cal_ece, cal_ece_baseline, cal_ece_diff)
+        metric_dict["bootstrap"]["calibration"][
+            "mce_pval"
+        ] = two_side_hypothesis_testing(cal_mce, cal_mce_baseline, cal_mce_diff)
 
     return metric_dict
 
