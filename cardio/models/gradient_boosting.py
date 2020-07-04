@@ -7,6 +7,7 @@ from .model import Model
 class GradientBoosting(Model):
     def __init__(self, balanced=False):
         self.balanced = balanced
+        self.feature_importance = None
 
     def create_model(self, random_state):
         seed_value = random_state.get_state()[1][0]
@@ -41,8 +42,10 @@ class GradientBoosting(Model):
             verbose_eval=True,
         )
         model["model"] = bst
+        self.feature_importance = bst.get_score(importance_type="gain")
 
     def predict_model(self, model, test_data):
         test_mat = xgb.DMatrix(data=test_data)
         preds = model["model"].predict(test_mat)
         return preds
+
