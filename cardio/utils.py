@@ -4,31 +4,35 @@ from sklearn import metrics
 
 from .roc_comparison.compare_auc_delong_xu import delong_roc_test
 
+FEATURE_TRANSLATION = {
+    "Paciente: Edad": "Age",
+    "Paciente: Sexo_Femenino": "Sex: Female",
+    "Indice de masa corporal": "BMI",
+    "Hipertensión": "Hypertension",
+    "Diabetes": "Diabetes",
+    "Enfermedad pulmonar crónica": "COPD",
+    "Enfermedad arterial periférica": "Peripheral Artery Disease",
+    "Enfermedad cerebro vascular": "Stroke",
+    "Insuficiencia cardíaca": "Heart failure",
+    "Insuficiencia renal - diálisis": "Dialysis",
+    "Fracción de Eyección (E)": "LVEF",
+    "Ultimo hematocrito": "Hematocrit",
+    "Ultimo nivel de creatinina": "Creatinine",
+    "Endocarditis infecciosa": "Endocarditis",
+    "Resucitación": "Reanimation",
+    "Shock cardiogénico": "Cardiogenic Shock",
+    "Arritmia": "Arrhythmia",
+    "Número de vasos coronarios enfermos": "Coronary Arteries Blocked",
+    "Insuficiencia aórtica (E)": "Aortic valve insufficiency",
+    "Insuficiencia mitral (E)": "Mitral valve regurgitation",
+    "Insuficiencia tricuspídea (E)": "Tricuspid valve regurgitation",
+    "Estado": "Urgency upon admission",
+    "Peso del procedimiento - procedimiento aislado no CABG": "(Weight of procedure) Isolated non-CABG",
+    "Peso del procedimiento - dos procedimientos": "(Weight of procedure) Two procedures",
+    "Peso del procedimiento - tres o más procedimientos": "(Weight of procedure) Three or more procedures",
+}
 
-ALL_FEATURES = [
-    "Paciente: Edad",
-    "Paciente: Sexo_Femenino",
-    "Indice de masa corporal",
-    "Hipertensión",
-    "Diabetes",
-    "Enfermedad pulmonar crónica",
-    "Enfermedad arterial periférica",
-    "Enfermedad cerebro vascular",
-    "Insuficiencia cardíaca",
-    "Insuficiencia renal - diálisis",
-    "Fracción de Eyección (E)",
-    "Ultimo hematocrito",
-    "Ultimo nivel de creatinina",
-    "Endocarditis infecciosa",
-    "Resucitación",
-    "Shock cardiogénico",
-    "Arritmia",
-    "Número de vasos coronarios enfermos",
-    "Insuficiencia aórtica (E)",
-    "Insuficiencia mitral (E)",
-    "Insuficiencia tricuspídea (E)",
-    "Estado",
-]
+ALL_FEATURES = list(FEATURE_TRANSLATION.keys())
 
 
 def get_bootstrap_metrics(

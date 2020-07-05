@@ -17,7 +17,7 @@ class NaiveBayes(Model):
     }
 
     BERNOULLI_VARIABLES = {
-        "Paciente: Sexo_Femenino",  # Gender: Female
+        "Paciente: Sexo_Femenino",  # Sex: Female
         "Hipertensión",  # Hypertension
         "Diabetes",  #  Diabetes
         "Enfermedad pulmonar crónica",  # COPD
