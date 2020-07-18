@@ -3,3 +3,7 @@ results/
 __pycache__/
 .vscode/
 *.pyc
+doc/
+figures/
+*.csv
+*.xlsx
