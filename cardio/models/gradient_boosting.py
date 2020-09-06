@@ -1,3 +1,4 @@
+import shap
 import numpy as np
 import xgboost as xgb
 
@@ -8,6 +9,7 @@ class GradientBoosting(Model):
     def __init__(self, balanced=False):
         self.balanced = balanced
         self.feature_importance = None
+        self.shap_values = None
 
     def create_model(self, random_state):
         seed_value = random_state.get_state()[1][0]
@@ -42,7 +44,13 @@ class GradientBoosting(Model):
             verbose_eval=True,
         )
         model["model"] = bst
-        self.feature_importance = bst.get_score(importance_type="gain")
+
+        # Calculate Feature Importance Once Per Experiment
+        if self.feature_importance is None:
+            self.feature_importance = bst.get_score(importance_type="gain")
+        if self.shap_values is None:
+            explainer = shap.TreeExplainer(bst)
+            self.shap_values = explainer.shap_values(train_data)
 
     def predict_model(self, model, test_data):
         test_mat = xgb.DMatrix(data=test_data)

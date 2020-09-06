@@ -1,14 +1,15 @@
 import json
 from io import BytesIO
 
+import shap
 import numpy as np
 import pandas as pd
 from PIL import Image
 from sklearn import metrics
 import matplotlib.pyplot as plt
 
-from cardio.utils import FEATURE_TRANSLATION
-from benchmark import load_split, TEST_SPLIT, OUTPUT_PATH
+from cardio.utils import FEATURE_TRANSLATION, ALL_FEATURES
+from benchmark import load_split, TRAIN_SPLIT, TEST_SPLIT, OUTPUT_PATH
 
 from confusion_matrix_pretty_print import plot_confusion_matrix_from_data
 
@@ -87,6 +88,7 @@ if __name__ == "__main__":
     with open(OUTPUT_PATH, "r") as f:
         results = json.load(f)
 
+    train_data = load_split(TRAIN_SPLIT)
     test_data = load_split(TEST_SPLIT, euroscore=True)
     test_labels = test_data["labels"]
 
@@ -209,6 +211,45 @@ if __name__ == "__main__":
     save_figure(f_imp, "figures/feature_importance.tiff", bbox_inches="tight")
 
     plt.close("all")
+
+    # SHAP values
+
+    shap_values = results["gradient_boosting"]["shap_values"]
+    shap_values = np.abs(np.array(shap_values)).mean(axis=0)
+    ordered = np.argsort(shap_values)[::-1]
+
+    feat_names = [test_data["features"][i] for i in ordered]
+    shap_values = [shap_values[i] for i in ordered]
+
+    useful = np.argwhere(np.array(shap_values) > 0)[:, 0].tolist()
+
+    feat_names = [FEATURE_TRANSLATION[feat_names[i]] for i in useful]
+    shap_values = [shap_values[i] for i in useful]
+
+    f_shap, ax = plt.subplots(figsize=(7.3, 3.5))
+    y_pos = np.arange(len(feat_names))
+    ax.barh(y_pos, shap_values)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(feat_names)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel("Importance (SHAP)")
+
+    save_figure(f_shap, "figures/shap_values.tiff", bbox_inches="tight")
+
+    plt.close("all")
+
+    shap_values = np.array(results["gradient_boosting"]["shap_values"])
+    shap.summary_plot(
+        shap_values,
+        features=train_data["data"],
+        feature_names=[FEATURE_TRANSLATION[name] for name in train_data["features"]],
+        show=False,
+    )
+
+    ax = plt.gca()
+    f_summary = ax.figure
+
+    save_figure(f_summary, "figures/shap_summary.tiff", dpi=300, bbox_inches="tight")
 
     # Create Confusion Matrices
 
