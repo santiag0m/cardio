@@ -57,3 +57,8 @@ class GradientBoosting(Model):
         preds = model["model"].predict(test_mat)
         return preds
 
+    @staticmethod
+    def save_model(model, path):
+        bst = model["model"]
+        bst.save_model(path)
+

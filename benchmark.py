@@ -221,6 +221,9 @@ if __name__ == "__main__":
             baseline=euroscore_preds,
             bootstrap=USE_BOOTSTRAP,
             num_trials=NUM_TRIALS_PER_MODEL,
+            export_path=os.path.join("models", "gradient_boosting_model.json")
+            if name == "gradient_boosting"
+            else None,
         )
         if USE_BOOTSTRAP:
             roc_auc = results[name]["holdout"]["roc"]["auc"]

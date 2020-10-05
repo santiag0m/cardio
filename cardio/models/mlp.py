@@ -59,6 +59,10 @@ class MLP(Model):
         preds = preds[:, 0]
         return preds
 
+    @staticmethod
+    def save_model(model, path):
+        model.model.save(path)
+
 
 class MLPClassifier:
     def __init__(

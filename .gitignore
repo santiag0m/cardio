@@ -7,3 +7,4 @@ doc/
 figures/
 *.csv
 *.xlsx
+models/
