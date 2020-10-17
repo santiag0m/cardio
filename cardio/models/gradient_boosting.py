@@ -10,6 +10,7 @@ class GradientBoosting(Model):
         self.balanced = balanced
         self.feature_importance = None
         self.shap_values = None
+        self.num_trials = 0
 
     def create_model(self, random_state):
         seed_value = random_state.get_state()[1][0]
@@ -46,11 +47,20 @@ class GradientBoosting(Model):
         model["model"] = bst
 
         # Calculate Feature Importance Once Per Experiment
+        explainer = shap.TreeExplainer(bst)
+        shap_values = explainer.shap_values(train_data)
         if self.feature_importance is None:
             self.feature_importance = bst.get_score(importance_type="gain")
         if self.shap_values is None:
-            explainer = shap.TreeExplainer(bst)
-            self.shap_values = explainer.shap_values(train_data)
+            self.shap_values = shap_values
+        else:
+            # SHAP Value approximated for ensembles
+            # https://github.com/slundberg/shap/issues/112
+            self.shap_values = ((self.shap_values * self.num_trials) + shap_values) / (
+                self.num_trials + 1
+            )
+
+        self.num_trials += 1
 
     def predict_model(self, model, test_data):
         test_mat = xgb.DMatrix(data=test_data)

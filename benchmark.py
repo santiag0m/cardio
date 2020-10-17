@@ -235,6 +235,7 @@ if __name__ == "__main__":
 
         if name == "gradient_boosting":
             results[name]["feature_importance"] = model.feature_importance
+            results[name]["shap_values"] = model.shap_values
 
     export_results(results)
     with open(OUTPUT_PATH, "w") as f:
