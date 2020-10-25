@@ -16,7 +16,7 @@ NUM_TRIALS_PER_MODEL = 10
 TRAIN_SPLIT = "train"
 TEST_SPLIT = "test"
 
-SPLIT_SOURCE = os.path.join("data", "processedDataJune2020.xlsx")
+SPLIT_SOURCE = os.path.join("data", "processedDataOctober2020.xlsx")
 EUROSCORE_SOURCE = os.path.join("data", "cardiodataMay2020.xlsx")
 
 EXPORT_PATH = "benchmark_results_final_variables.csv"
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     # Evaluate models
     model_dict = {
-        "isolation_forest": models.IsolationForest(),
+        # "isolation_forest": models.IsolationForest(),
         "logistic_regression": models.LogisticRegression(
             balanced=False, scaler="minmax"
         ),
