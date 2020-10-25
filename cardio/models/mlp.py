@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import tempfile
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -134,35 +135,28 @@ class MLPClassifier:
         self.model.compile(
             optimizer=self.optimizer, loss=WeightedBce(inverse_weight), metrics=["acc"]
         )
-        temp_folder = os.path.join(TEMP_FOLDER, "keras_temp")
+        with tempfile.TemporaryDirectory() as temp_folder:
+            filepath = os.path.join(temp_folder, "keras_best_nn")
+            os.makedirs(filepath)
 
-        if os.path.exists(temp_folder):
-            shutil.rmtree(temp_folder)
-            os.makedirs(temp_folder)
-
-        filepath = os.path.join(temp_folder, "keras_best_nn")
-        os.makedirs(filepath)
-
-        self.model.fit(
-            x=train_set[0],
-            y=train_set[1],
-            validation_data=val_set,
-            epochs=self.max_iter,
-            shuffle=self.shuffle,
-            batch_size=self.batch_size,
-            callbacks=[
-                tf.keras.callbacks.ModelCheckpoint(
-                    filepath=filepath,
-                    monitor="val_loss",
-                    save_best_only=True,
-                    save_weights_only=True,
-                )
-            ],
-            verbose=self.verbose,
-        )
-        self.model.load_weights(filepath)
-
-        shutil.rmtree(temp_folder)
+            self.model.fit(
+                x=train_set[0],
+                y=train_set[1],
+                validation_data=val_set,
+                epochs=self.max_iter,
+                shuffle=self.shuffle,
+                batch_size=self.batch_size,
+                callbacks=[
+                    tf.keras.callbacks.ModelCheckpoint(
+                        filepath=filepath,
+                        monitor="val_loss",
+                        save_best_only=True,
+                        save_weights_only=True,
+                    )
+                ],
+                verbose=self.verbose,
+            )
+            self.model.load_weights(filepath)
 
     def predict_proba(self, test_data):
         test_data = test_data.astype(np.float32)
