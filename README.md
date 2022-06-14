@@ -7,7 +7,7 @@ We present the first Machine Learning-based model for Cardiac Operative Risk in 
 
 The model was trained on Colombian Population from the city of Bogota and has been validated using retrospective data so far.
 
-**IT IS NOT READY FOR MEDICAL USE**, and is only provided as an educational tool only.
+**IT IS NOT READY FOR MEDICAL USE**, and is provided as an educational tool only.
 
 
 ## Overview of the code
