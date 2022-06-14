@@ -1,4 +1,4 @@
-# Cardio
+# Cardio Risk Calculator
 Code repository for the paper [_Cardiac Operative Risk in Latin America: A Comparison of Machine Learning Models vs EuroSCORE-II_](https://www.sciencedirect.com/science/article/pii/S0003497521004483) published in The Annals of Thoracic Surgery
 
 We present the first Machine Learning-based model for Cardiac Operative Risk in Latin America, you can try it out at [cardiorisk.ml](cardiorisk.ml).
