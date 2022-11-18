@@ -3,7 +3,7 @@ scipy==1.4.1
 pandas==0.25.3
 xlrd==1.2.0
 scikit-learn==0.19.2
-tensorflow==2.1.2
+tensorflow==2.7.2
 xgboost==1.1.0
 Pillow==9.0.1
 shap==0.24.0
